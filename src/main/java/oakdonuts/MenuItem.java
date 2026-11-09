@@ -1,7 +1,7 @@
 // Project: Oaks Donut Shop
 // Course: CMPCS 221
 // Author: Brian P. Hartnett Jr.
-// File: MenuItem - Reusable Menu Item Class
+// File: MenuItem - Menu Item Class
 
 package oakdonuts;
 
