@@ -3,22 +3,22 @@
 // Author: Brian P. Hartnett Jr.
 // File: MenuItem - Menu Item Class
 
-package oakdonuts;
+package entity;
 
 public class MenuItem {
-    private int id;
+    private String id;
     private String name;
     private int priceCents;
     private String description;
 
-    public MenuItem(int id, String name, int priceCents, String description) {
+    public MenuItem(String id, String name, int priceCents, String description) {
         this.id = id;
         this.name = name;
         this.priceCents = priceCents;
         this.description = description;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 

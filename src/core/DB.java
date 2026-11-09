@@ -3,7 +3,7 @@
 // Author: Brian P. Hartnett Jr.
 // File: DB
 
-package oakdonuts;
+package core;
 
 import java.sql.*;
 
