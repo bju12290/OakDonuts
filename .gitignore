@@ -37,3 +37,13 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### DB Stuff ###
+target/
+.idea/
+*.iml
+*.class
+
+# Derby
+oakdonutsdb/
+derby.log
