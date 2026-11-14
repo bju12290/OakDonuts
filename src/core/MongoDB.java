@@ -9,6 +9,8 @@ import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import org.bson.types.ObjectId;
+
 import org.bson.Document;
 
 // Establish and test a connection to MongoDB
@@ -29,8 +31,6 @@ public class MongoDB {
     public static MongoDatabase getDatabase() {
         return client.getDatabase("oaksdonuts");
     }
-
-
 
     public static void testConnection() {
 

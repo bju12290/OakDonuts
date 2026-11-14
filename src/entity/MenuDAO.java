@@ -13,7 +13,13 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
+import com.mongodb.client.result.DeleteResult;
+
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,5 +69,36 @@ public class MenuDAO {
 
         // Return all retrieved items to the caller
         return items;
+    }
+
+    //UPDATE - Modify an existing menu item.
+    public boolean update(String id, String name, int priceCents, String description) {
+
+        // Locate the donut by its unique MongoDB ID.
+        ObjectId objectId = new ObjectId(id);
+
+        // Update the specified fields without changing the ID.
+        UpdateResult result = menu.updateOne(
+                Filters.eq("_id", objectId),
+                Updates.combine(
+                        Updates.set("name", name),
+                        Updates.set("priceCents", priceCents),
+                        Updates.set("description", description)
+                )
+        );
+
+        // True if the donut was found.
+        return result.getMatchedCount() > 0;
+    }
+
+    // DELETE - Remove a menu item by its unique ID.
+    public boolean delete(String id) {
+        ObjectId objectId = new ObjectId(id);
+
+        DeleteResult result = menu.deleteOne(
+                Filters.eq("_id", objectId)
+        );
+
+        return result.getDeletedCount() > 0;
     }
 }

@@ -19,7 +19,7 @@ public class Main extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Define the columns of our menu table
+        // Define the columns of the menu table
         String[] columns = {"Name", "Price", "Description"};
 
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
