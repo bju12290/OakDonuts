@@ -164,12 +164,8 @@ public class Main extends JFrame {
         // Ordering interface.
         tabs.addTab("Ordering", split);
 
-        // Temporary placeholder for transaction management.
-        JPanel historyPanel = new JPanel(new BorderLayout());
-        historyPanel.add(
-                new JLabel("Order History", SwingConstants.CENTER),
-                BorderLayout.CENTER
-        );
+        // Transaction management interface
+        OrderHistoryPanel historyPanel = new OrderHistoryPanel();
         tabs.addTab("Order History", historyPanel);
 
         // Menu administration interface
@@ -184,6 +180,11 @@ public class Main extends JFrame {
 
             if (tabs.getSelectedComponent() == split) {
                 refreshOrderingMenu();
+            }
+
+
+            if (tabs.getSelectedComponent() == historyPanel) {
+                historyPanel.refreshOrders();
             }
         });
 

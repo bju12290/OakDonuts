@@ -3,6 +3,10 @@ package entity;
 
 import core.MongoDB;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.Updates;
+
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
@@ -84,5 +88,131 @@ public class OrderDAO {
                 subtotalCents,
                 taxCents
         );
+    }
+
+
+    // READ - Retrieve all completed orders, newest first.
+    public List<Order> getAll() {
+
+        List<Order> history = new ArrayList<>();
+
+        // Query MongoDB, sorting by transaction date.
+        for (Document doc : orders.find()
+                .sort(Sorts.descending("date"))) {
+
+            List<CartItem> items = new ArrayList<>();
+
+            // Reconstruct each purchased item from its stored snapshot.
+            for (Document purchased : doc.getList("items", Document.class)) {
+
+                MenuItem snapshot = new MenuItem(
+                        purchased.getString("menuItemId"),
+                        purchased.getString("name"),
+                        purchased.getInteger("priceCents"),
+                        ""
+                );
+
+                CartItem cartItem = new CartItem(
+                        snapshot,
+                        purchased.getInteger("quantity"),
+                        purchased.getString("icing"),
+                        purchased.getString("filling")
+                );
+
+                items.add(cartItem);
+            }
+
+            // Convert the full MongoDB document into an Order.
+            Order order = new Order(
+                    doc.getObjectId("_id").toHexString(),
+                    doc.getDate("date").toInstant(),
+                    items,
+                    doc.getInteger("subtotalCents"),
+                    doc.getInteger("taxCents")
+            );
+
+            history.add(order);
+        }
+
+        return history;
+    }
+
+
+    // UPDATE - Change the quantity of an item in a saved order.
+    public boolean updateQuantity(
+            String transactionId, int itemIndex, int newQuantity) {
+
+        if (newQuantity < 1) {
+            throw new IllegalArgumentException(
+                    "Quantity must be at least 1."
+            );
+        }
+
+        ObjectId id = new ObjectId(transactionId);
+
+        // Find the existing transaction.
+        Document order = orders.find(
+                Filters.eq("_id", id)
+        ).first();
+
+        if (order == null) {
+            return false;
+        }
+
+        List<Document> items = order.getList(
+                "items", Document.class
+        );
+
+        if (itemIndex < 0 || itemIndex >= items.size()) {
+            throw new IllegalArgumentException(
+                    "Invalid order item."
+            );
+        }
+
+        // Change the quantity of the selected item.
+        items.get(itemIndex).put("quantity", newQuantity);
+
+        // Recalculate all line totals and the order subtotal.
+        int subtotalCents = 0;
+
+        for (Document item : items) {
+
+            int lineTotal = Math.multiplyExact(
+                    item.getInteger("priceCents"),
+                    item.getInteger("quantity")
+            );
+
+            item.put("lineTotalCents", lineTotal);
+
+            subtotalCents = Math.addExact(
+                    subtotalCents, lineTotal
+            );
+        }
+
+        int taxCents = (int) Math.round(subtotalCents * 0.06);
+        int totalCents = Math.addExact(subtotalCents, taxCents);
+
+        // Save the revised items and totals together.
+        // The transaction ID and original date remain unchanged.
+        return orders.updateOne(
+                Filters.eq("_id", id),
+                Updates.combine(
+                        Updates.set("items", items),
+                        Updates.set("subtotalCents", subtotalCents),
+                        Updates.set("taxCents", taxCents),
+                        Updates.set("totalCents", totalCents)
+                )
+        ).getMatchedCount() > 0;
+    }
+
+
+    // DELETE - Remove a completed transaction.
+    public boolean delete(String transactionId) {
+
+        ObjectId id = new ObjectId(transactionId);
+
+        return orders.deleteOne(
+                Filters.eq("_id", id)
+        ).getDeletedCount() > 0;
     }
 }
