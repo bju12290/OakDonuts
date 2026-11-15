@@ -161,7 +161,7 @@ public class Main extends JFrame {
         // Create the application's tab navigation.
         JTabbedPane tabs = new JTabbedPane();
 
-        // Existing ordering interface.
+        // Ordering interface.
         tabs.addTab("Ordering", split);
 
         // Temporary placeholder for transaction management.
@@ -172,13 +172,20 @@ public class Main extends JFrame {
         );
         tabs.addTab("Order History", historyPanel);
 
-        // Temporary placeholder for menu administration.
-        JPanel managementPanel = new JPanel(new BorderLayout());
-        managementPanel.add(
-                new JLabel("Menu Management", SwingConstants.CENTER),
-                BorderLayout.CENTER
-        );
+        // Menu administration interface
+        MenuManagementPanel managementPanel = new MenuManagementPanel();
         tabs.addTab("Menu Management", managementPanel);
+
+        tabs.addChangeListener(e -> {
+
+            if (tabs.getSelectedComponent() == managementPanel) {
+                managementPanel.refreshMenu();
+            }
+
+            if (tabs.getSelectedComponent() == split) {
+                refreshOrderingMenu();
+            }
+        });
 
         // Display the tabbed interface in the main window.
         root.add(tabs, BorderLayout.CENTER);
@@ -252,6 +259,46 @@ public class Main extends JFrame {
         checkoutButton.setEnabled(!cart.isEmpty());
     }
 
+    private void refreshOrderingMenu() {
+
+        // Remember the selected donut, if any.
+        String selectedId = null;
+        int index = menuList.getSelectedIndex();
+
+        if (index >= 0 && index < menuItems.size()) {
+            selectedId = menuItems.get(index).getId();
+        }
+
+        // Retrieve fresh menu data from MongoDB.
+        List<MenuItem> latest = new MenuDAO().getAll();
+
+        menuItems.clear();
+        menuItems.addAll(latest);
+
+        // Rebuild the list displayed in Ordering.
+        menuModel.clear();
+
+        int restoreIndex = -1;
+
+        for (int i = 0; i < menuItems.size(); i++) {
+            MenuItem item = menuItems.get(i);
+
+            menuModel.addElement(
+                    item.getName() + " - " + money(item.getPriceCents())
+            );
+
+            if (item.getId().equals(selectedId)) {
+                restoreIndex = i;
+            }
+        }
+
+        if (!menuItems.isEmpty()) {
+            menuList.setSelectedIndex(
+                    restoreIndex >= 0 ? restoreIndex : 0
+            );
+        }
+    }
+
     // Convert integer cents into a formatted dollar amount.
     private static String money(int cents) {
         return String.format(Locale.US, "$%.2f", cents / 100.0);
@@ -290,7 +337,6 @@ public class Main extends JFrame {
             );
         }
     }
-
 
     public static void main(String[] args) {
 
